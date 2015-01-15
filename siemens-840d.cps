@@ -1,16 +1,16 @@
 /**
-  Copyright (C) 2012-2013 by Autodesk, Inc.
+  Copyright (C) 2012-2014 by Autodesk, Inc.
   All rights reserved.
 
   Siemens SINUMERIK 840D post processor configuration.
 
-  $Revision: 37254 $
-  $Date: 2014-05-26 11:17:00 +0200 (ma, 26 maj 2014) $
+  $Revision: 37892 $
+  $Date: 2014-10-09 13:42:35 +0200 (to, 09 okt 2014) $
   
   FORKID {75AF44EA-0A42-4803-8DE7-43BF08B352B3}
 */
 
-description = "GitHub - Siemens SINUMERIK 840D";
+description = "Siemens SINUMERIK 840D";
 vendor = "Autodesk, Inc.";
 vendorUrl = "http://www.autodesk.com";
 legal = "Copyright (C) 2012-2013 by Autodesk, Inc.";
@@ -41,6 +41,7 @@ properties = {
   showSequenceNumbers: true, // show sequence numbers
   sequenceNumberStart: 10, // first sequence number
   sequenceNumberIncrement: 1, // increment for sequence numbers
+  optionalStop: true, // optional stop
   useShortestDirection: true, // specifies that shortest angular direction should be used
   useParametricFeed: false, // specifies that feed should be output using Q values
   showNotes: false, // specifies that operation notes should be output.
@@ -397,7 +398,6 @@ function initializeActiveFeeds() {
     ++id;
   }
   
-/*
   if (hasParameter("operation:reducedFeedrate")) {
     if (movements & (1 << MOVEMENT_REDUCED)) {
       var feedContext = new FeedContext(id, localize("Reduced"), getParameter("operation:reducedFeedrate"));
@@ -406,7 +406,6 @@ function initializeActiveFeeds() {
     }
     ++id;
   }
-*/
 
   if (hasParameter("operation:tool_feedRamp")) {
     if (movements & ((1 << MOVEMENT_RAMP) | (1 << MOVEMENT_RAMP_HELIX) | (1 << MOVEMENT_RAMP_PROFILE) | (1 << MOVEMENT_RAMP_ZIG_ZAG))) {
@@ -664,7 +663,7 @@ function onSection() {
     if (properties.preloadTool) {
       var nextTool = (properties.toolAsName ? getNextToolDescription(tool.description) : getNextTool(tool.number));
       if (nextTool) {
-        writeBlock("T" + (properties.toolAsName ? "="  + "\"" + (nextTool.description.toUpperCase()) + "\"" : toolFormat.format(tool.number)));
+        writeBlock("T" + (properties.toolAsName ? "="  + "\"" + (nextTool.description.toUpperCase()) + "\"" : toolFormat.format(nextTool.number)));
       } else {
         // preload first tool
         var section = getSection(0);
