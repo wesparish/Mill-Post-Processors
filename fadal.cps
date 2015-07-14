@@ -4,13 +4,13 @@
 
   Fadal post processor configuration.
 
-  $Revision: 37285 $
-  $Date: 2014-05-30 12:38:14 +0200 (fr, 30 maj 2014) $
+  $Revision: 38312 $
+  $Date: 2014-12-22 13:06:03 +0100 (ma, 22 dec 2014) $
   
   FORKID {D3B70418-781B-4cfb-8CD2-98E9C897515A}
 */
 
-description = "GitHub - Generic Fadal";
+description = "Generic Fadal";
 vendor = "Autodesk, Inc.";
 vendorUrl = "http://www.autodesk.com";
 legal = "Copyright (C) 2012-2014 by Autodesk, Inc.";
@@ -57,7 +57,7 @@ var mapCoolantTable = new Table(
   "Invalid coolant mode"
 );
 
-var gFormat = createFormat({prefix:"G", decimals:0});
+var gFormat = createFormat({prefix:"G", decimals:1});
 var mFormat = createFormat({prefix:"M", decimals:0});
 var hFormat = createFormat({prefix:"H", decimals:0});
 var dFormat = createFormat({prefix:"D", decimals:0});
@@ -606,6 +606,10 @@ function onSection() {
 */
 }
 
+ function onSpindleSpeed(spindleSpeed) {
+  writeBlock(sOutput.format(spindleSpeed));
+}
+
 function onDwell(seconds) {
   if (seconds > 99999.999) {
     warning(localize("Dwelling time is out of range."));
@@ -627,6 +631,7 @@ function getCommonCycle(x, y, z, r) {
 
 function onCyclePoint(x, y, z) {
   if (isFirstCyclePoint()) {
+    gRetractModal.reset(); // force G98 to avoid slow feed issue between canned cycles reported for some CNCs
     repositionToCycleClearance(cycle, x, y, z);
     
     // return to initial Z which is clearance plane and set absolute mode
@@ -894,8 +899,13 @@ function onLinear(_x, _y, _z, feed) {
 }
 
 function onRapid5D(_x, _y, _z, _a, _b, _c) {
+  if (!currentSection.isOptimizedForMachine()) {
+    error(localize("This post configuration has not been customized for 5-axis simultaneous toolpath."));
+    return;
+  }
   if (pendingRadiusCompensation >= 0) {
     error(localize("Radius compensation mode cannot be changed at rapid traversal."));
+    return;
   }
   var x = xOutput.format(_x);
   var y = yOutput.format(_y);
@@ -914,6 +924,10 @@ function onRapid5D(_x, _y, _z, _a, _b, _c) {
 }
 
 function onLinear5D(_x, _y, _z, _a, _b, _c, feed) {
+  if (!currentSection.isOptimizedForMachine()) {
+    error(localize("This post configuration has not been customized for 5-axis simultaneous toolpath."));
+    return;
+  }
   if (pendingRadiusCompensation >= 0) {
     error(localize("Radius compensation cannot be activated/deactivated for 5-axis move."));
     return;
